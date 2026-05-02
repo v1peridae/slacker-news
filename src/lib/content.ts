@@ -20,6 +20,7 @@ export type Post = {
     url: string;
     title: string;
     author?: string;
+    authorSlackId?: string;
     category?: string;
     date: Date;
     excerpt: string;
@@ -38,6 +39,7 @@ export type Post = {
 type ChangelogBase = {
     date: string;
     author: string;
+    slackId?: string;
 };
 
 export type ShortChangelogEntry = ChangelogBase & {
@@ -79,6 +81,23 @@ function truncateWords(input: string, count: number): string {
     }
 
     return `${words.slice(0, count).join(" ")}...`;
+}
+
+function normalizeHandle(handle: string): string {
+    return handle.trim().replace(/^@+/, "").toLowerCase();
+}
+
+function getAuthorSlackId(author: string | undefined): string | undefined {
+    if (!author) {
+        return undefined;
+    }
+
+    const normalizedAuthor = normalizeHandle(author);
+    const matchingAcknowledgement = acknowledgementsData.find(
+        (person) => normalizeHandle(person.name) === normalizedAuthor
+    );
+
+    return matchingAcknowledgement?.slackId;
 }
 
 function replaceSlackMentionComponents(input: string): string {
@@ -198,6 +217,7 @@ export async function getPosts(): Promise<Post[]> {
                 url: `/${entry.id}/`,
                 title: entry.data.title,
                 author: entry.data.author,
+                authorSlackId: getAuthorSlackId(entry.data.author),
                 category,
                 date: entry.data.date,
                 excerpt: toExcerpt({ body: entry.body!, data: entry.data }),
@@ -244,7 +264,8 @@ export async function getChangelogEntries(): Promise<ChangelogEntry[]> {
         kind: "short",
         change: entry.change,
         date: entry.date,
-        author: entry.author
+        author: entry.author,
+        slackId: getAuthorSlackId(entry.author)
     }));
 
     const longCollection = await getCollection("changelogs");
@@ -270,6 +291,7 @@ export async function getChangelogEntries(): Promise<ChangelogEntry[]> {
             title: entry.data.title,
             date: dateString,
             author: entry.data.author,
+            slackId: getAuthorSlackId(entry.data.author),
             excerpt: toExcerpt({ body: entry.body!, data: entry.data }),
             paragraphs,
             leadingImage,

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import SlackMention from "../components/SlackMention.astro";
 import { formatStoryDate, getPosts, getSiteConfig } from "../lib/content";
 import { render } from "astro:content";
 
@@ -57,7 +58,11 @@ const followUpLinks = post.followUpTo?.map((slug) => {
       <h1 class="story-title">{post.title}</h1>
       <div class="story-meta">
         {post.category && <span class="story-category">{post.category.toUpperCase()}</span>}
-        {post.author && <span class="story-author">By {post.author}</span>}
+        {post.author && (
+          <span class="story-author">
+            By {post.authorSlackId ? <SlackMention name={post.author.replace(/^@+/, "")} id={post.authorSlackId} /> : post.author}
+          </span>
+        )}
         {post.author && " — "}
         <time>{formatStoryDate(new Date(post.date))}</time>
       </div>
