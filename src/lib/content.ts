@@ -261,14 +261,6 @@ export async function getPosts(): Promise<Post[]> {
         });
 
     for (const post of processedPosts) {
-        if (post.followUpTo) {
-            post.followUps = processedPosts
-                .filter((p) => post.followUpTo!.includes(p.slug))
-                .map((p) => ({ slug: p.slug, url: p.url, title: p.title }));
-        }
-    }
-
-    for (const post of processedPosts) {
         for (const otherPost of processedPosts) {
             if (otherPost.responseTo?.includes(post.slug)) {
                 if (!post.responses) post.responses = [];
